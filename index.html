@@ -8,31 +8,26 @@
 <style>
 body{
     margin:0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-    background: linear-gradient(135deg, #0f172a, #1e293b);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    background: linear-gradient(135deg,#0f172a,#1e293b);
     color:white;
 }
 
 .container{
-    max-width:700px;
+    max-width:800px;
     margin:auto;
     padding:20px;
 }
 
-h1{
-    text-align:center;
-}
+/* HEADER */
+h1{text-align:center;}
+.subtitle{text-align:center;opacity:0.7;margin-bottom:10px;}
 
-.subtitle{
-    text-align:center;
-    opacity:0.7;
-    margin-bottom:20px;
-}
-
+/* INPUT */
 .topbar{
     display:flex;
     gap:8px;
-    margin-bottom:15px;
+    margin-bottom:10px;
 }
 
 input{
@@ -40,47 +35,9 @@ input{
     border-radius:10px;
     padding:10px;
     outline:none;
-    font-size:14px;
 }
 
-.nameInput{
-    flex:2;
-}
-
-.pointsInput{
-    width:90px;
-}
-
-.reasonInput{
-    flex:1;
-}
-
-.card{
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(10px);
-    padding:15px;
-    margin:12px 0;
-    border-radius:16px;
-    border:1px solid rgba(255,255,255,0.1);
-}
-
-.name{
-    font-size:18px;
-    font-weight:600;
-}
-
-.score{
-    font-size:26px;
-    color:#facc15;
-    margin:6px 0;
-}
-
-.row{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    margin-top:8px;
-}
+.nameInput{flex:1;}
 
 button{
     border:none;
@@ -90,39 +47,82 @@ button{
     font-weight:bold;
     transition:0.2s;
 }
+button:hover{transform:scale(1.05);}
 
-button:hover{
-    transform:scale(1.05);
+.add{background:#22c55e;color:white;}
+.apply{background:#3b82f6;color:white;}
+.reset{background:#111827;color:white;width:100%;margin-top:15px;}
+.party{background:#f59e0b;color:black;width:100%;margin-top:10px;}
+
+/* PODIO */
+.podium{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin:15px 0;
 }
 
-.add{
-    background:#22c55e;
-    color:white;
-}
-
-.apply{
-    background:#3b82f6;
-    color:white;
-}
-
-.reset{
-    width:100%;
-    margin-top:20px;
-    background:#111827;
-    color:white;
-}
-
-.history{
-    margin-top:20px;
-    background:rgba(255,255,255,0.05);
-    padding:12px;
+.pod{
+    flex:1;
+    padding:10px;
     border-radius:12px;
+    text-align:center;
+    font-weight:bold;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.1);
 }
 
-li{
-    font-size:13px;
-    opacity:0.85;
-    margin-bottom:6px;
+.first{transform:scale(1.1);border:2px solid gold;}
+.second{border:2px solid silver;}
+.third{border:2px solid #cd7f32;}
+
+/* CARD */
+.card{
+    background:rgba(255,255,255,0.08);
+    padding:12px;
+    margin:10px 0;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.1);
+    position:relative;
+    overflow:hidden;
+}
+
+.name{font-size:18px;font-weight:600;}
+.score{font-size:24px;color:#facc15;margin:5px 0;}
+
+/* ANIMAZIONE +AURA */
+.float{
+    position:absolute;
+    right:20px;
+    top:10px;
+    font-size:18px;
+    font-weight:bold;
+    animation:fly 1s ease-out forwards;
+}
+
+@keyframes fly{
+    0%{opacity:0;transform:translateY(10px);}
+    30%{opacity:1;}
+    100%{opacity:0;transform:translateY(-30px);}
+}
+
+/* PARTY MODE */
+.partyMode body{
+    background:black;
+}
+.partyScreen{
+    position:fixed;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    background:black;
+    display:none;
+    color:white;
+    text-align:center;
+    padding-top:50px;
+}
+.partyScreen h1{
+    font-size:40px;
 }
 </style>
 </head>
@@ -132,29 +132,35 @@ li{
 <div class="container">
 
 <h1>✨ Punti Aura</h1>
-<div class="subtitle">Classifica vacanza live</div>
+<div class="subtitle">Vacanza Edition</div>
+
+<button class="party" onclick="toggleParty()">🎉 Party Screen</button>
 
 <div class="topbar">
 <input id="playerName" class="nameInput" placeholder="Nome giocatore">
-<button class="add" onclick="addPlayer()">Aggiungi</button>
+<button class="add" onclick="addPlayer()">+</button>
 </div>
+
+<!-- PODIO -->
+<div class="podium" id="podium"></div>
 
 <div id="players"></div>
 
-<button class="reset" onclick="resetGame()">Reset Vacanza 🔥</button>
-
-<div class="history">
-<h3>📜 Cronologia eventi</h3>
-<ul id="history"></ul>
-</div>
+<button class="reset" onclick="resetGame()">Reset 🔥</button>
 
 </div>
 
-<!-- Firebase -->
+<!-- PARTY SCREEN -->
+<div class="partyScreen" id="partyScreen">
+    <h1>🎉 PARTY MODE 🎉</h1>
+    <div id="partyScores"></div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <script>
+
 const firebaseConfig = {
   apiKey: "AIzaSyBq2Kpq6dNDPhRg5i7v_RfjbKGMbHoQnWo",
   authDomain: "punti-aura.firebaseapp.com",
@@ -168,65 +174,62 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let players = [];
-let history = [];
+let players=[];
+let history=[];
 
-/* 🔥 LIVE SYNC */
-db.ref("aura").on("value", (snapshot) => {
-    const data = snapshot.val();
-
-    if(data){
-        players = data.players || [];
-        history = data.history || [];
+db.ref("aura").on("value", snap=>{
+    const d=snap.val();
+    if(d){
+        players=d.players||[];
+        history=d.history||[];
         render();
-        renderHistory();
+        renderPodium();
+        renderParty();
     }
 });
 
-/* 💾 SAVE */
 function save(){
-    db.ref("aura").set({
-        players,
-        history
-    });
+    db.ref("aura").set({players,history});
 }
 
-/* ➕ ADD PLAYER */
+/* ADD */
 function addPlayer(){
-    let name = document.getElementById("playerName").value.trim();
-    if(!name) return;
-
-    players.push({name, score:0});
+    let name=document.getElementById("playerName").value.trim();
+    if(!name)return;
+    players.push({name,score:0});
     document.getElementById("playerName").value="";
     save();
 }
 
-/* ⚡ APPLY POINTS */
-function applyPoints(index){
+/* POINTS + ANIMATION */
+function applyPoints(i){
 
-    let points = document.getElementById("p"+index).value;
-    let reason = document.getElementById("r"+index).value.trim();
+    let v=parseInt(document.getElementById("p"+i).value);
+    let r=document.getElementById("r"+i).value;
 
-    let value = parseInt(points);
+    if(isNaN(v)||v===0)return;
 
-    if(isNaN(value) || value === 0) return;
+    players[i].score+=v;
 
-    players[index].score += value;
+    let sign=v>0?"+":"";
+    history.unshift(`${players[i].name} ${sign}${v} Aura → ${r||"evento misterioso"}`);
+    history=history.slice(0,50);
 
-    let sign = value > 0 ? "+" : "";
-    let text = `${players[index].name} ${sign}${value} Aura`;
-
-    if(reason){
-        text += ` → ${reason}`;
-    }
-
-    history.unshift(text);
-    history = history.slice(0,60);
-
+    showFloat(i,sign+v);
     save();
 }
 
-/* 🎨 RENDER PLAYERS */
+/* FLOAT ANIMATION */
+function showFloat(i,text){
+    const el=document.getElementById("card"+i);
+    const f=document.createElement("div");
+    f.className="float";
+    f.innerText=text;
+    el.appendChild(f);
+    setTimeout(()=>f.remove(),1000);
+}
+
+/* RENDER */
 function render(){
 
     players.sort((a,b)=>b.score-a.score);
@@ -234,43 +237,52 @@ function render(){
     let html="";
 
     players.forEach((p,i)=>{
-
-        html += `
-        <div class="card">
-
+        html+=`
+        <div class="card" id="card${i}">
             <div class="name">${p.name}</div>
             <div class="score">${p.score} Aura</div>
 
-            <div class="row">
-                <input id="p${i}" class="pointsInput" placeholder="+/-">
-                <input id="r${i}" class="reasonInput" placeholder="Cosa è successo?">
-                <button class="apply" onclick="applyPoints(${i})">OK</button>
-            </div>
-
-        </div>
-        `;
+            <input id="p${i}" placeholder="+/-">
+            <input id="r${i}" placeholder="evento">
+            <button class="apply" onclick="applyPoints(${i})">OK</button>
+        </div>`;
     });
 
-    document.getElementById("players").innerHTML = html;
+    document.getElementById("players").innerHTML=html;
 }
 
-/* 📜 HISTORY */
-function renderHistory(){
-    document.getElementById("history").innerHTML =
-    history.map(h=>`<li>${h}</li>`).join("");
+/* PODIO */
+function renderPodium(){
+
+    let top=[...players].sort((a,b)=>b.score-a.score).slice(0,3);
+
+    let html="";
+
+    if(top[0]) html+=`<div class="pod first">🥇 ${top[0].name}<br>${top[0].score}</div>`;
+    if(top[1]) html+=`<div class="pod second">🥈 ${top[1].name}<br>${top[1].score}</div>`;
+    if(top[2]) html+=`<div class="pod third">🥉 ${top[2].name}<br>${top[2].score}</div>`;
+
+    document.getElementById("podium").innerHTML=html;
 }
 
-/* 🔥 RESET */
+/* PARTY SCREEN */
+function toggleParty(){
+    const ps=document.getElementById("partyScreen");
+    ps.style.display=ps.style.display==="block"?"none":"block";
+}
+
+function renderParty(){
+    document.getElementById("partyScores").innerHTML=
+    players.map(p=>`<h2>${p.name}: ${p.score}</h2>`).join("");
+}
+
+/* RESET */
 function resetGame(){
+    const pin=prompt("PIN admin?");
+    if(pin!=="1234")return;
 
-    const pin = prompt("PIN admin?");
-    if(pin !== "1234"){
-        alert("Non autorizzato");
-        return;
-    }
-
-    players = [];
-    history = [];
+    players=[];
+    history=[];
     save();
 }
 
