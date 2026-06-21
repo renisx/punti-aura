@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Punti Aura</title>
+
+<style>
+body{
+    margin:0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color:white;
+}
+
+.container{
+    max-width:700px;
+    margin:auto;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+}
+
+.subtitle{
+    text-align:center;
+    opacity:0.7;
+    margin-bottom:20px;
+}
+
+.topbar{
+    display:flex;
+    gap:8px;
+    margin-bottom:15px;
+}
+
+input, textarea{
+    border:none;
+    border-radius:10px;
+    padding:10px;
+    outline:none;
+    font-size:14px;
+}
+
+.nameInput{
+    flex:2;
+}
+
+.card{
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    padding:15px;
+    margin:12px 0;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,0.1);
+}
+
+.name{
+    font-size:18px;
+    font-weight:600;
+}
+
+.score{
+    font-size:26px;
+    color:#facc15;
+    margin:6px 0;
+}
+
+.row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:8px;
+}
+
+.pointsInput{
+    width:90px;
+}
+
+.reasonInput{
+    flex:1;
+}
+
+button{
+    border:none;
+    border-radius:10px;
+    padding:10px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.2s;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+.add{
+    background:#22c55e;
+    color:white;
+}
+
+.apply{
+    background:#3b82f6;
+    color:white;
+}
+
+.reset{
+    width:100%;
+    margin-top:20px;
+    background:#111827;
+    color:white;
+}
+
+.history{
+    margin-top:20px;
+    background:rgba(255,255,255,0.05);
+    padding:12px;
+    border-radius:12px;
+}
+
+li{
+    font-size:13px;
+    opacity:0.85;
+    margin-bottom:6px;
+    line-height:1.3;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>✨ Punti Aura</h1>
+<div class="subtitle">La cronaca epica della vacanza</div>
+
+<div class="topbar">
+<input id="playerName" class="nameInput" placeholder="Nome giocatore">
+<button class="add" onclick="addPlayer()">Aggiungi</button>
+</div>
+
+<div id="players"></div>
+
+<button class="reset" onclick="resetGame()">Reset Vacanza 🔥</button>
+
+<div class="history">
+<h3>📜 Cronologia eventi</h3>
+<ul id="history"></ul>
+</div>
+
+</div>
+
+<script>
+
+let players = JSON.parse(localStorage.getItem("auraPlayers")) || [];
+let history = JSON.parse(localStorage.getItem("auraHistory")) || [];
+
+function save(){
+    localStorage.setItem("auraPlayers", JSON.stringify(players));
+    localStorage.setItem("auraHistory", JSON.stringify(history));
+}
+
+function addHistory(text){
+    history.unshift(text);
+    history = history.slice(0,60);
+    save();
+    renderHistory();
+}
+
+function addPlayer(){
+    let name = document.getElementById("playerName").value.trim();
+    if(!name) return;
+
+    players.push({name, score:0});
+    document.getElementById("playerName").value="";
+    save();
+    render();
+}
+
+function applyPoints(index){
+
+    let points = document.getElementById("p"+index).value;
+    let reason = document.getElementById("r"+index).value.trim();
+
+    let value = parseInt(points);
+
+    if(isNaN(value) || value === 0) return;
+
+    players[index].score += value;
+
+    let sign = value > 0 ? "+" : "";
+
+    let text = `${players[index].name} ${sign}${value} Aura`;
+
+    if(reason){
+        text += ` → ${reason}`;
+    }
+
+    addHistory(text);
+
+    document.getElementById("p"+index).value="";
+    document.getElementById("r"+index).value="";
+
+    save();
+    render();
+}
+
+function render(){
+
+    players.sort((a,b)=>b.score-a.score);
+
+    let html="";
+
+    players.forEach((p,i)=>{
+
+        html += `
+        <div class="card">
+
+            <div class="name">${p.name}</div>
+            <div class="score">${p.score} Aura</div>
+
+            <div class="row">
+                <input id="p${i}" class="pointsInput" placeholder="+/-">
+                <input id="r${i}" class="reasonInput" placeholder="Cosa è successo?">
+                <button class="apply" onclick="applyPoints(${i})">OK</button>
+            </div>
+
+        </div>
+        `;
+    });
+
+    document.getElementById("players").innerHTML = html;
+}
+
+function renderHistory(){
+    document.getElementById("history").innerHTML =
+    history.map(h=>`<li>${h}</li>`).join("");
+}
+
+function resetGame(){
+
+    const pin = prompt("PIN admin?");
+    if(pin !== "1234"){
+        alert("Non autorizzato");
+        return;
+    }
+
+    players=[];
+    history=[];
+    save();
+    render();
+    renderHistory();
+}
+
+render();
+renderHistory();
+
+</script>
+
+</body>
+</html>
