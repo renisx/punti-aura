@@ -19,7 +19,6 @@ body{
     padding:20px;
 }
 
-/* HEADER */
 h1{text-align:center;}
 .subtitle{text-align:center;opacity:0.7;margin-bottom:10px;}
 
@@ -57,22 +56,20 @@ button:hover{transform:scale(1.05);}
 /* PODIO */
 .podium{
     display:flex;
-    justify-content:center;
     gap:10px;
+    justify-content:center;
     margin:15px 0;
 }
 
 .pod{
     flex:1;
+    text-align:center;
     padding:10px;
     border-radius:12px;
-    text-align:center;
-    font-weight:bold;
     background:rgba(255,255,255,0.08);
-    border:1px solid rgba(255,255,255,0.1);
 }
 
-.first{transform:scale(1.1);border:2px solid gold;}
+.first{border:2px solid gold;transform:scale(1.1);}
 .second{border:2px solid silver;}
 .third{border:2px solid #cd7f32;}
 
@@ -84,18 +81,18 @@ button:hover{transform:scale(1.05);}
     border-radius:14px;
     border:1px solid rgba(255,255,255,0.1);
     position:relative;
-    overflow:hidden;
 }
 
 .name{font-size:18px;font-weight:600;}
 .score{font-size:24px;color:#facc15;margin:5px 0;}
 
-/* ANIMAZIONE +AURA */
+input.small{width:80px;}
+
+/* FLOAT ANIMATION */
 .float{
     position:absolute;
     right:20px;
     top:10px;
-    font-size:18px;
     font-weight:bold;
     animation:fly 1s ease-out forwards;
 }
@@ -106,24 +103,31 @@ button:hover{transform:scale(1.05);}
     100%{opacity:0;transform:translateY(-30px);}
 }
 
-/* PARTY MODE */
-.partyMode body{
-    background:black;
+/* HISTORY */
+.historyBox{
+    margin-top:15px;
+    padding:12px;
+    background:rgba(255,255,255,0.05);
+    border-radius:12px;
 }
+
+#history li{
+    font-size:13px;
+    opacity:0.85;
+    margin-bottom:6px;
+}
+
+/* PARTY */
 .partyScreen{
     position:fixed;
     top:0;left:0;
-    width:100%;
-    height:100%;
+    width:100%;height:100%;
     background:black;
     display:none;
-    color:white;
     text-align:center;
     padding-top:50px;
 }
-.partyScreen h1{
-    font-size:40px;
-}
+.partyScreen h1{font-size:40px;}
 </style>
 </head>
 
@@ -134,7 +138,7 @@ button:hover{transform:scale(1.05);}
 <h1>✨ Punti Aura</h1>
 <div class="subtitle">Vacanza Edition</div>
 
-<button class="party" onclick="toggleParty()">🎉 Party Screen</button>
+<button class="party" onclick="toggleParty()">🎉 Party Mode</button>
 
 <div class="topbar">
 <input id="playerName" class="nameInput" placeholder="Nome giocatore">
@@ -144,18 +148,26 @@ button:hover{transform:scale(1.05);}
 <!-- PODIO -->
 <div class="podium" id="podium"></div>
 
+<!-- EVENTI -->
+<div class="historyBox">
+<h3>📜 Eventi della vacanza</h3>
+<ul id="history"></ul>
+</div>
+
+<!-- PLAYERS -->
 <div id="players"></div>
 
 <button class="reset" onclick="resetGame()">Reset 🔥</button>
 
 </div>
 
-<!-- PARTY SCREEN -->
+<!-- PARTY -->
 <div class="partyScreen" id="partyScreen">
-    <h1>🎉 PARTY MODE 🎉</h1>
-    <div id="partyScores"></div>
+<h1>🎉 PARTY MODE 🎉</h1>
+<div id="partyScores"></div>
 </div>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
@@ -177,17 +189,22 @@ const db = firebase.database();
 let players=[];
 let history=[];
 
+/* LIVE */
 db.ref("aura").on("value", snap=>{
     const d=snap.val();
+
     if(d){
         players=d.players||[];
         history=d.history||[];
+
         render();
         renderPodium();
+        renderHistory();
         renderParty();
     }
 });
 
+/* SAVE */
 function save(){
     db.ref("aura").set({players,history});
 }
@@ -201,7 +218,7 @@ function addPlayer(){
     save();
 }
 
-/* POINTS + ANIMATION */
+/* APPLY POINTS */
 function applyPoints(i){
 
     let v=parseInt(document.getElementById("p"+i).value);
@@ -212,14 +229,14 @@ function applyPoints(i){
     players[i].score+=v;
 
     let sign=v>0?"+":"";
-    history.unshift(`${players[i].name} ${sign}${v} Aura → ${r||"evento misterioso"}`);
+    history.unshift(`${players[i].name} ${sign}${v} Aura → ${r||"evento"}`);
     history=history.slice(0,50);
 
     showFloat(i,sign+v);
     save();
 }
 
-/* FLOAT ANIMATION */
+/* FLOAT */
 function showFloat(i,text){
     const el=document.getElementById("card"+i);
     const f=document.createElement("div");
@@ -242,7 +259,7 @@ function render(){
             <div class="name">${p.name}</div>
             <div class="score">${p.score} Aura</div>
 
-            <input id="p${i}" placeholder="+/-">
+            <input id="p${i}" class="small" placeholder="+/-">
             <input id="r${i}" placeholder="evento">
             <button class="apply" onclick="applyPoints(${i})">OK</button>
         </div>`;
@@ -265,10 +282,16 @@ function renderPodium(){
     document.getElementById("podium").innerHTML=html;
 }
 
-/* PARTY SCREEN */
+/* HISTORY */
+function renderHistory(){
+    document.getElementById("history").innerHTML=
+    history.map(h=>`<li>${h}</li>`).join("");
+}
+
+/* PARTY */
 function toggleParty(){
-    const ps=document.getElementById("partyScreen");
-    ps.style.display=ps.style.display==="block"?"none":"block";
+    const p=document.getElementById("partyScreen");
+    p.style.display=p.style.display==="block"?"none":"block";
 }
 
 function renderParty(){
